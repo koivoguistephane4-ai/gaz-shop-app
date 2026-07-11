@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-gas-bg text-gas-text font-sans antialiased;
+}
+
+/* Chiffres alignés en tabulaire pour les tableaux de ventes */
+.tabular {
+  @apply font-mono tabular-nums;
+}
+
+.card {
+  @apply bg-gas-card border border-gas-line rounded-card shadow-sm;
+}
+
+.btn-primary {
+  @apply bg-flame-500 hover:bg-flame-600 text-white font-medium px-4 py-2 rounded-card transition-colors;
+}
+
+.btn-secondary {
+  @apply bg-navy-900 hover:bg-navy-800 text-white font-medium px-4 py-2 rounded-card transition-colors;
+}
+
+.input-field {
+  @apply border border-gas-line rounded-card px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-flame-500;
+}
