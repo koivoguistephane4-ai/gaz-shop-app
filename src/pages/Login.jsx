@@ -61,7 +61,7 @@ export default function Login() {
         </form>
 
         <p className="text-xs text-gas-muted mt-6">
-          Les comptes sont créés uniquement par l'administrateur. Contactez-le si vous n'avez pas d'accès.
+          Binvenue sur votre espace de travail. Union, Discipline et Travail. Pour toute assistance, contactez l'administrateur.
         </p>
       </div>
     </div>
