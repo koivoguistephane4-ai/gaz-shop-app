@@ -97,6 +97,16 @@ export default function GerantDashboard() {
 
   const totalJour = sales.reduce((sum, s) => sum + Number(s.montant || 0), 0)
 
+  // Récapitulatif par marque : nombre de B6 / B12 vendues + montant, façon fiche papier
+  const brandTally = {}
+  for (const s of sales) {
+    const nom = s.bottle_brands?.nom ?? '—'
+    if (!brandTally[nom]) brandTally[nom] = { logo: s.bottle_brands?.logo_url, B6: 0, B12: 0, montant: 0 }
+    brandTally[nom][s.taille] = (brandTally[nom][s.taille] ?? 0) + 1
+    brandTally[nom].montant += Number(s.montant || 0)
+  }
+  const brandTallyRows = Object.entries(brandTally).sort((a, b) => a[0].localeCompare(b[0]))
+
   if (loading) {
     return (
       <Layout>
@@ -261,6 +271,45 @@ export default function GerantDashboard() {
               : `${selectedStock} bouteille${selectedStock > 1 ? 's' : ''} pleine${selectedStock > 1 ? 's' : ''} disponible${selectedStock > 1 ? 's' : ''}.`}
           </p>
         )}
+      </div>
+
+      {/* Récapitulatif par marque, façon fiche papier (B6 / B12) */}
+      <h2 className="text-sm font-semibold text-gas-muted mb-3">Détail par marque — aujourd'hui</h2>
+      <div className="card overflow-x-auto mb-8">
+        <table className="w-full text-sm">
+          <thead className="bg-gas-bg text-gas-muted text-left">
+            <tr>
+              <th className="px-4 py-3 font-medium">Marque</th>
+              <th className="px-4 py-3 font-medium">B6</th>
+              <th className="px-4 py-3 font-medium">B12</th>
+              <th className="px-4 py-3 font-medium">Montant</th>
+            </tr>
+          </thead>
+          <tbody>
+            {brandTallyRows.length === 0 && (
+              <tr><td className="px-4 py-4 text-gas-muted" colSpan={4}>Aucune vente enregistrée pour l'instant.</td></tr>
+            )}
+            {brandTallyRows.map(([nom, t]) => (
+              <tr key={nom} className="border-t border-gas-line">
+                <td className="px-4 py-2 font-medium flex items-center gap-2">
+                  <BrandLogo nom={nom} logoUrl={t.logo} size={20} />
+                  {nom}
+                </td>
+                <td className="px-4 py-2 tabular">{t.B6 || 0}</td>
+                <td className="px-4 py-2 tabular">{t.B12 || 0}</td>
+                <td className="px-4 py-2 tabular">{t.montant.toLocaleString('fr-FR')} F</td>
+              </tr>
+            ))}
+            {brandTallyRows.length > 0 && (
+              <tr className="border-t border-gas-line bg-gas-bg font-semibold">
+                <td className="px-4 py-2">Total</td>
+                <td className="px-4 py-2 tabular">{brandTallyRows.reduce((s, [, t]) => s + (t.B6 || 0), 0)}</td>
+                <td className="px-4 py-2 tabular">{brandTallyRows.reduce((s, [, t]) => s + (t.B12 || 0), 0)}</td>
+                <td className="px-4 py-2 tabular">{totalJour.toLocaleString('fr-FR')} F</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
 
       {/* Tableau des ventes du jour */}
