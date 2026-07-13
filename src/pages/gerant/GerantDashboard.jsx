@@ -132,6 +132,21 @@ export default function GerantDashboard() {
         </div>
       </div>
 
+      {/* Récapitulatif par mode de paiement, pour faire la caisse en fin de journée */}
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
+        {PAYMENT_MODES.map((m) => {
+          const total = sales
+            .filter((s) => (s.mode_paiement || 'especes') === m.key)
+            .reduce((sum, s) => sum + Number(s.montant || 0), 0)
+          return (
+            <div key={m.key} className="card p-3">
+              <div className="text-xs text-gas-muted">{m.label}</div>
+              <div className="tabular text-base font-semibold mt-1">{total.toLocaleString('fr-FR')} F</div>
+            </div>
+          )
+        })}
+      </div>
+
       {message && (
         <div
           className={`mb-4 text-sm px-4 py-2 rounded-card ${
