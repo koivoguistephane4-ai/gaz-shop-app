@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabaseClient'
 import { useAuth } from '../../context/AuthContext'
 import Layout from '../../components/Layout'
 import { paymentModeLabel } from '../../lib/paymentModes'
+import { downloadXlsx } from '../../lib/exportXlsx'
 import BrandLogo from '../../components/BrandLogo'
 
 const TAILLES = ['B6', 'B12']
@@ -107,27 +108,16 @@ export default function HistoriquePage() {
         s.bottle_brands?.nom ?? '',
         s.taille,
         paymentModeLabel(s.mode_paiement),
-        Number(s.montant).toString(),
+        Number(s.montant),
       ]
     })
 
     const total = sales.reduce((sum, s) => sum + Number(s.montant || 0), 0)
     rows.push([])
-    rows.push(['', '', '', '', 'TOTAL', total.toString()])
+    rows.push(['', '', '', '', 'TOTAL', total])
 
-    const csvContent = [header, ...rows]
-      .map((r) => r.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(';'))
-      .join('\n')
-
-    // \uFEFF = BOM, pour qu'Excel affiche correctement les accents
-    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
     const today = new Date().toISOString().slice(0, 10)
-    link.href = url
-    link.download = `ventes_${period}_${today}.csv`
-    link.click()
-    URL.revokeObjectURL(url)
+    downloadXlsx(header, rows, `ventes_${period}_${today}`)
   }
 
   return (
@@ -188,14 +178,14 @@ export default function HistoriquePage() {
           >
             <div className="font-semibold">{p.label}</div>
             <div className="text-xs text-gas-muted mt-1">
-              {exporting === p.key ? 'Génération…' : 'Télécharger en CSV'}
+              {exporting === p.key ? 'Génération…' : 'Télécharger en Excel'}
             </div>
           </button>
         ))}
       </div>
 
       <p className="text-xs text-gas-muted mt-4">
-        Le fichier CSV s'ouvre directement dans Excel et contient le détail de chaque vente sur la période choisie, avec le total en bas.
+        Le fichier Excel (.xlsx) contient le détail de chaque vente sur la période choisie, avec le total en bas.
       </p>
     </Layout>
   )

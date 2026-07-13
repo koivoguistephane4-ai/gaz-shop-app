@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabaseClient'
 import Layout from '../../components/Layout'
 import { paymentModeLabel } from '../../lib/paymentModes'
+import { downloadXlsx } from '../../lib/exportXlsx'
 import SalesCalendar from '../../components/SalesCalendar'
 
 const TAILLES = ['B6', 'B12']
@@ -105,24 +106,14 @@ export default function BoutiqueDetailPage() {
         s.bottle_brands?.nom ?? '',
         s.taille,
         paymentModeLabel(s.mode_paiement),
-        Number(s.montant).toString(),
+        Number(s.montant),
       ]
     })
     const total = data.reduce((sum, s) => sum + Number(s.montant || 0), 0)
     rows.push([])
-    rows.push(['', '', '', '', '', 'TOTAL', total.toString()])
+    rows.push(['', '', '', '', '', 'TOTAL', total])
 
-    const csvContent = [header, ...rows]
-      .map((r) => r.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(';'))
-      .join('\n')
-
-    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `ventes_${boutique?.nom || id}_${period}_${new Date().toISOString().slice(0, 10)}.csv`
-    link.click()
-    URL.revokeObjectURL(url)
+    downloadXlsx(header, rows, `ventes_${boutique?.nom || id}_${period}_${new Date().toISOString().slice(0, 10)}`)
   }
 
   if (loading) {
@@ -191,7 +182,7 @@ export default function BoutiqueDetailPage() {
               >
                 <div className="font-medium text-sm">{p.label}</div>
                 <div className="text-xs text-gas-muted mt-1">
-                  {exporting === p.key ? 'Génération…' : 'CSV'}
+                  {exporting === p.key ? 'Génération…' : 'Excel'}
                 </div>
               </button>
             ))}

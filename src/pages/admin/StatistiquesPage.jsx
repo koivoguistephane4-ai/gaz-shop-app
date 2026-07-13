@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabaseClient'
 import Layout from '../../components/Layout'
 import { paymentModeLabel, isElectronicPayment, PAYMENT_MODES } from '../../lib/paymentModes'
+import { downloadXlsx } from '../../lib/exportXlsx'
 
 function startDateFor(period) {
   const now = new Date()
@@ -73,23 +74,13 @@ export default function StatistiquesPage() {
         s.bottle_brands?.nom ?? '',
         s.taille,
         paymentModeLabel(s.mode_paiement),
-        Number(s.montant).toString(),
+        Number(s.montant),
       ]
     })
     rows.push([])
-    rows.push(['', '', '', '', '', '', 'TOTAL', chiffreAffaires.toString()])
+    rows.push(['', '', '', '', '', '', 'TOTAL', chiffreAffaires])
 
-    const csvContent = [header, ...rows]
-      .map((r) => r.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(';'))
-      .join('\n')
-
-    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `statistiques_${period}_${new Date().toISOString().slice(0, 10)}.csv`
-    link.click()
-    URL.revokeObjectURL(url)
+    downloadXlsx(header, rows, `statistiques_${period}_${new Date().toISOString().slice(0, 10)}`)
     setExporting(false)
   }
 
