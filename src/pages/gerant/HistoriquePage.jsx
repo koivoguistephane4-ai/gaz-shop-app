@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabaseClient'
 import { useAuth } from '../../context/AuthContext'
 import Layout from '../../components/Layout'
+import { paymentModeLabel } from '../../lib/paymentModes'
 import BrandLogo from '../../components/BrandLogo'
 
 const TAILLES = ['B6', 'B12']
@@ -97,7 +98,7 @@ export default function HistoriquePage() {
   }
 
   function downloadCsv(sales, period) {
-    const header = ['Date', 'Heure', 'Marque', 'Taille', 'Montant (FCFA)']
+    const header = ['Date', 'Heure', 'Marque', 'Taille', 'Paiement', 'Montant (FCFA)']
     const rows = sales.map((s) => {
       const d = new Date(s.created_at)
       return [
@@ -105,13 +106,14 @@ export default function HistoriquePage() {
         d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
         s.bottle_brands?.nom ?? '',
         s.taille,
+        paymentModeLabel(s.mode_paiement),
         Number(s.montant).toString(),
       ]
     })
 
     const total = sales.reduce((sum, s) => sum + Number(s.montant || 0), 0)
     rows.push([])
-    rows.push(['', '', '', 'TOTAL', total.toString()])
+    rows.push(['', '', '', '', 'TOTAL', total.toString()])
 
     const csvContent = [header, ...rows]
       .map((r) => r.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(';'))

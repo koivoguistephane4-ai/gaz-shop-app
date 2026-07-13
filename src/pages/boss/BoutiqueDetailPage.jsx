@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabaseClient'
 import Layout from '../../components/Layout'
+import { paymentModeLabel } from '../../lib/paymentModes'
 import SalesCalendar from '../../components/SalesCalendar'
 
 const TAILLES = ['B6', 'B12']
@@ -94,7 +95,7 @@ export default function BoutiqueDetailPage() {
       return
     }
 
-    const header = ['Date', 'Heure', 'Gérant', 'Marque', 'Taille', 'Montant (FCFA)']
+    const header = ['Date', 'Heure', 'Gérant', 'Marque', 'Taille', 'Paiement', 'Montant (FCFA)']
     const rows = data.map((s) => {
       const d = new Date(s.created_at)
       return [
@@ -103,12 +104,13 @@ export default function BoutiqueDetailPage() {
         s.profiles?.nom ?? '',
         s.bottle_brands?.nom ?? '',
         s.taille,
+        paymentModeLabel(s.mode_paiement),
         Number(s.montant).toString(),
       ]
     })
     const total = data.reduce((sum, s) => sum + Number(s.montant || 0), 0)
     rows.push([])
-    rows.push(['', '', '', '', 'TOTAL', total.toString()])
+    rows.push(['', '', '', '', '', 'TOTAL', total.toString()])
 
     const csvContent = [header, ...rows]
       .map((r) => r.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(';'))

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabaseClient'
 import Layout from '../../components/Layout'
+import { paymentModeLabel } from '../../lib/paymentModes'
 
 export default function VentesPage() {
   const [boutiques, setBoutiques] = useState([])
@@ -172,6 +173,9 @@ export default function VentesPage() {
                     <td className="px-4 py-2 text-gas-muted">{s.taille}</td>
                     <td className="px-4 py-2 tabular">
                       {Number(s.montant).toLocaleString('fr-FR')} F
+                      <span className="ml-2 text-xs text-gas-muted">
+                        ({paymentModeLabel(s.mode_paiement)})
+                      </span>
                       {!s.avec_echange && (
                         <span className="ml-2 text-xs px-1.5 py-0.5 rounded-full bg-flame-100 text-flame-600" title={s.client_nom || ''}>
                           sans vide

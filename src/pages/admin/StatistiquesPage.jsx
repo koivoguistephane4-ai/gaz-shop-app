@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabaseClient'
 import Layout from '../../components/Layout'
+import { paymentModeLabel, isElectronicPayment, PAYMENT_MODES } from '../../lib/paymentModes'
 
 function startDateFor(period) {
   const now = new Date()
@@ -61,7 +62,7 @@ export default function StatistiquesPage() {
 
   function handleExport() {
     setExporting(true)
-    const header = ['Date', 'Heure', 'Boutique', 'Gérant', 'Marque', 'Taille', 'Montant (FCFA)']
+    const header = ['Date', 'Heure', 'Boutique', 'Gérant', 'Marque', 'Taille', 'Paiement', 'Montant (FCFA)']
     const rows = sales.map((s) => {
       const d = new Date(s.created_at)
       return [
@@ -71,11 +72,12 @@ export default function StatistiquesPage() {
         s.profiles?.nom ?? '',
         s.bottle_brands?.nom ?? '',
         s.taille,
+        paymentModeLabel(s.mode_paiement),
         Number(s.montant).toString(),
       ]
     })
     rows.push([])
-    rows.push(['', '', '', '', '', 'TOTAL', chiffreAffaires.toString()])
+    rows.push(['', '', '', '', '', '', 'TOTAL', chiffreAffaires.toString()])
 
     const csvContent = [header, ...rows]
       .map((r) => r.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(';'))
@@ -123,7 +125,7 @@ export default function StatistiquesPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
         <div className="card p-4">
           <div className="text-xs text-gas-muted uppercase tracking-wide">Ventes — {PERIODS.find(p => p.key === period)?.label}</div>
           <div className="tabular text-2xl font-semibold mt-1">{totalVentes}</div>
@@ -136,6 +138,20 @@ export default function StatistiquesPage() {
           <div className="text-xs text-gas-muted uppercase tracking-wide">Panier moyen</div>
           <div className="tabular text-2xl font-semibold mt-1">{Math.round(panierMoyen).toLocaleString('fr-FR')} F</div>
         </div>
+      </div>
+
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-8">
+        {PAYMENT_MODES.map((m) => {
+          const total = sales
+            .filter((s) => (s.mode_paiement || 'especes') === m.key)
+            .reduce((sum, s) => sum + Number(s.montant || 0), 0)
+          return (
+            <div key={m.key} className="card p-3">
+              <div className="text-xs text-gas-muted">{m.label}</div>
+              <div className="tabular text-base font-semibold mt-1">{total.toLocaleString('fr-FR')} F</div>
+            </div>
+          )
+        })}
       </div>
 
       <div className="card overflow-x-auto">
@@ -151,15 +167,16 @@ export default function StatistiquesPage() {
               <th className="px-4 py-2 font-medium">Gérant</th>
               <th className="px-4 py-2 font-medium">Marque</th>
               <th className="px-4 py-2 font-medium">Taille</th>
+              <th className="px-4 py-2 font-medium">Paiement</th>
               <th className="px-4 py-2 font-medium">Montant</th>
             </tr>
           </thead>
           <tbody>
             {loading && (
-              <tr><td className="px-4 py-4 text-gas-muted" colSpan={6}>Chargement…</td></tr>
+              <tr><td className="px-4 py-4 text-gas-muted" colSpan={7}>Chargement…</td></tr>
             )}
             {!loading && sales.length === 0 && (
-              <tr><td className="px-4 py-4 text-gas-muted" colSpan={6}>Aucune vente sur cette période.</td></tr>
+              <tr><td className="px-4 py-4 text-gas-muted" colSpan={7}>Aucune vente sur cette période.</td></tr>
             )}
             {sales.map((s) => (
               <tr key={s.id} className="border-t border-gas-line">
@@ -170,6 +187,7 @@ export default function StatistiquesPage() {
                 <td className="px-4 py-2 text-gas-muted">{s.profiles?.nom}</td>
                 <td className="px-4 py-2 font-medium">{s.bottle_brands?.nom}</td>
                 <td className="px-4 py-2 text-gas-muted">{s.taille}</td>
+                <td className="px-4 py-2 text-gas-muted">{paymentModeLabel(s.mode_paiement)}</td>
                 <td className="px-4 py-2 tabular">{Number(s.montant).toLocaleString('fr-FR')} F</td>
               </tr>
             ))}

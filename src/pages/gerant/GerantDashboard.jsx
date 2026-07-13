@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabaseClient'
 import { useAuth } from '../../context/AuthContext'
 import Layout from '../../components/Layout'
 import BrandLogo from '../../components/BrandLogo'
+import { PAYMENT_MODES, paymentModeLabel } from '../../lib/paymentModes'
 
 export default function GerantDashboard() {
   const { profile } = useAuth()
@@ -14,7 +15,7 @@ export default function GerantDashboard() {
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState(null)
 
-  const [form, setForm] = useState({ brand_id: '', taille: 'B6', avec_echange: true, client_nom: '' })
+  const [form, setForm] = useState({ brand_id: '', taille: 'B6', avec_echange: true, client_nom: '', mode_paiement: 'especes' })
 
   useEffect(() => {
     if (profile) init()
@@ -79,6 +80,7 @@ export default function GerantDashboard() {
       taille: form.taille,
       avec_echange: form.avec_echange,
       client_nom: form.client_nom.trim() || null,
+      mode_paiement: form.mode_paiement,
     })
 
     setSaving(false)
@@ -89,7 +91,7 @@ export default function GerantDashboard() {
     }
 
     setMessage({ type: 'success', text: 'Vente enregistrée.' })
-    setForm({ brand_id: '', taille: 'B6', avec_echange: true, client_nom: '' })
+    setForm({ brand_id: '', taille: 'B6', avec_echange: true, client_nom: '', mode_paiement: 'especes' })
     await Promise.all([loadBrandsStockPrices(), loadSales()])
   }
 
@@ -163,7 +165,7 @@ export default function GerantDashboard() {
           ))}
         </div>
 
-        <form onSubmit={handleAddSale} className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+        <form onSubmit={handleAddSale} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
           <div>
             <label className="block text-sm text-gas-muted mb-1">Taille</label>
             <select
@@ -179,6 +181,25 @@ export default function GerantDashboard() {
             <label className="block text-sm text-gas-muted mb-1">Montant</label>
             <div className="input-field tabular bg-gas-bg text-gas-muted">
               {form.brand_id ? `${selectedPrix.toLocaleString('fr-FR')} F` : '—'}
+            </div>
+          </div>
+          <div className="sm:col-span-2 lg:col-span-1">
+            <label className="block text-sm text-gas-muted mb-1">Paiement</label>
+            <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-1 gap-1.5">
+              {PAYMENT_MODES.map((m) => (
+                <button
+                  key={m.key}
+                  type="button"
+                  onClick={() => setForm((f) => ({ ...f, mode_paiement: m.key }))}
+                  className={`text-xs px-2 py-1.5 rounded-card border transition-colors ${
+                    form.mode_paiement === m.key
+                      ? 'bg-navy-900 text-white border-navy-900'
+                      : 'bg-white text-gas-muted border-gas-line hover:border-navy-900/40'
+                  }`}
+                >
+                  {m.label}
+                </button>
+              ))}
             </div>
           </div>
           <button
@@ -256,8 +277,13 @@ export default function GerantDashboard() {
                 <td className="px-4 py-2 text-gas-muted">{s.taille}</td>
                 <td className="px-4 py-2 tabular">{Number(s.montant).toLocaleString('fr-FR')} F</td>
                 <td className="px-4 py-2">
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${
+                    s.mode_paiement === 'especes' ? 'bg-gas-line text-gas-muted' : 'bg-navy-800/10 text-navy-800'
+                  }`}>
+                    {paymentModeLabel(s.mode_paiement)}
+                  </span>
                   {!s.avec_echange && (
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-flame-100 text-flame-600" title={s.client_nom || ''}>
+                    <span className="ml-1 text-xs px-2 py-0.5 rounded-full bg-flame-100 text-flame-600" title={s.client_nom || ''}>
                       Sans vide{s.client_nom ? ` — ${s.client_nom}` : ''}
                     </span>
                   )}
