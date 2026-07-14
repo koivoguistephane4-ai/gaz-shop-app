@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabaseClient'
 import Layout from '../../components/Layout'
 
-const ROLE_LABEL = { admin: 'Administrateur', boss: 'Patron', gerant: 'Gérant' }
+const ROLE_LABEL = { admin: 'Administrateur', boss: 'Patron', gerant: 'Gérant', sous_depot: 'Sous-dépôt' }
 
 // Le SDK Supabase ne remonte pas automatiquement le corps JSON {"error": "..."}
 // d'une Edge Function en erreur — on va le chercher manuellement.
@@ -26,6 +26,7 @@ export default function UtilisateursPage() {
     email: '',
     password: '',
     nom: '',
+    telephone: '',
     role: 'gerant',
     boutique_id: '',
     boutique_ids: [],
@@ -68,8 +69,9 @@ export default function UtilisateursPage() {
       email: form.email.trim(),
       password: form.password,
       nom: form.nom.trim(),
+      telephone: form.telephone.trim() || null,
       role: form.role,
-      boutique_id: form.role === 'gerant' ? form.boutique_id : null,
+      boutique_id: (form.role === 'gerant' || form.role === 'sous_depot') ? form.boutique_id : null,
       boutique_ids: form.role === 'boss' ? form.boutique_ids : [],
     }
 
@@ -88,7 +90,7 @@ export default function UtilisateursPage() {
     }
 
     setMessage({ type: 'success', text: `Compte créé : ${payload.email}` })
-    setForm({ email: '', password: '', nom: '', role: 'gerant', boutique_id: '', boutique_ids: [] })
+    setForm({ email: '', password: '', nom: '', telephone: '', role: 'gerant', boutique_id: '', boutique_ids: [] })
     load()
   }
 
@@ -196,14 +198,17 @@ export default function UtilisateursPage() {
                 onChange={(e) => updateForm('role', e.target.value)}
               >
                 <option value="gerant">Gérant</option>
+                <option value="sous_depot">Sous-dépôt</option>
                 <option value="boss">Patron (boss)</option>
                 <option value="admin">Administrateur</option>
               </select>
             </div>
 
-            {form.role === 'gerant' && (
+            {(form.role === 'gerant' || form.role === 'sous_depot') && (
               <div>
-                <label className="block text-sm text-gas-muted mb-1">Boutique</label>
+                <label className="block text-sm text-gas-muted mb-1">
+                  {form.role === 'sous_depot' ? 'Boutique fournisseur' : 'Boutique'}
+                </label>
                 <select
                   className="input-field"
                   value={form.boutique_id}
@@ -215,6 +220,18 @@ export default function UtilisateursPage() {
                     <option key={b.id} value={b.id}>{b.nom}</option>
                   ))}
                 </select>
+              </div>
+            )}
+
+            {form.role === 'sous_depot' && (
+              <div>
+                <label className="block text-sm text-gas-muted mb-1">Téléphone (optionnel)</label>
+                <input
+                  type="text"
+                  className="input-field"
+                  value={form.telephone}
+                  onChange={(e) => updateForm('telephone', e.target.value)}
+                />
               </div>
             )}
 

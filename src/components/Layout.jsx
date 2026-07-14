@@ -9,6 +9,7 @@ const NAV_BY_ROLE = {
     { to: '/utilisateurs', label: 'Utilisateurs' },
     { to: '/boutiques', label: 'Boutiques' },
     { to: '/ventes', label: 'Ventes' },
+    { to: '/commandes-suivi', label: 'Commandes' },
     { to: '/reapprovisionnement', label: 'Stock & réappro' },
     { to: '/prix', label: 'Prix des bouteilles' },
   ],
@@ -16,12 +17,18 @@ const NAV_BY_ROLE = {
     { to: '/statistiques', label: 'Statistiques' },
     { to: '/', label: 'Mes boutiques' },
     { to: '/ventes', label: 'Ventes' },
+    { to: '/commandes-suivi', label: 'Commandes' },
     { to: '/reapprovisionnement', label: 'Stock & réappro' },
     { to: '/prix', label: 'Prix des bouteilles' },
   ],
   gerant: [
     { to: '/', label: 'Caisse — Vente du jour' },
+    { to: '/commandes', label: 'Commandes' },
     { to: '/historique', label: 'Historique' },
+  ],
+  sous_depot: [
+    { to: '/', label: 'Passer une commande' },
+    { to: '/mes-commandes', label: 'Mes commandes' },
   ],
 }
 
@@ -29,6 +36,7 @@ const ROLE_LABEL = {
   admin: 'Administrateur',
   boss: 'Patron',
   gerant: 'Gérant',
+  sous_depot: 'Sous-dépôt',
 }
 
 export default function Layout({ children }) {

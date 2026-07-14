@@ -77,13 +77,21 @@ Deno.serve(async (req) => {
     // Vérifie s'il existe un historique lié (ventes, rapports, réappros) qui empêcherait
     // une suppression propre — dans ce cas on désactive au lieu de supprimer, pour ne
     // jamais perdre la traçabilité de qui a fait quoi.
-    const [{ count: salesCount }, { count: reportsCount }, { count: restockCount }] = await Promise.all([
+    const [{ count: salesCount }, { count: reportsCount }, { count: restockCount }, { data: sousDepot }] = await Promise.all([
       supabaseAdmin.from('sale_transactions').select('*', { count: 'exact', head: true }).eq('gerant_id', user_id),
       supabaseAdmin.from('daily_reports').select('*', { count: 'exact', head: true }).eq('gerant_id', user_id),
       supabaseAdmin.from('restock_entries').select('*', { count: 'exact', head: true }).eq('created_by', user_id),
+      supabaseAdmin.from('sous_depots').select('id').eq('profile_id', user_id).maybeSingle(),
     ])
 
-    const hasHistory = (salesCount ?? 0) > 0 || (reportsCount ?? 0) > 0 || (restockCount ?? 0) > 0
+    let commandesCount = 0
+    if (sousDepot?.id) {
+      const { count } = await supabaseAdmin
+        .from('commandes').select('*', { count: 'exact', head: true }).eq('sous_depot_id', sousDepot.id)
+      commandesCount = count ?? 0
+    }
+
+    const hasHistory = (salesCount ?? 0) > 0 || (reportsCount ?? 0) > 0 || (restockCount ?? 0) > 0 || commandesCount > 0
 
     if (hasHistory) {
       // Désactivation : le compte ne peut plus se connecter, mais l'historique reste intact

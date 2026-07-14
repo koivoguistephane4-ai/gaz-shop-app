@@ -9,10 +9,14 @@ import ReapprovisionnementPage from './pages/admin/ReapprovisionnementPage'
 import PrixPage from './pages/admin/PrixPage'
 import VentesPage from './pages/admin/VentesPage'
 import StatistiquesPage from './pages/admin/StatistiquesPage'
+import CommandesAdminPage from './pages/admin/CommandesAdminPage'
 import BossDashboard from './pages/boss/BossDashboard'
 import BoutiqueDetailPage from './pages/boss/BoutiqueDetailPage'
 import GerantDashboard from './pages/gerant/GerantDashboard'
+import NouvelleCommandePage from './pages/sousdepot/NouvelleCommandePage'
+import MesCommandesPage from './pages/sousdepot/MesCommandesPage'
 import HistoriquePage from './pages/gerant/HistoriquePage'
+import CommandesPage from './pages/gerant/CommandesPage'
 
 // Redirige "/" vers le bon dashboard selon le rôle du profil connecté
 function Home() {
@@ -20,6 +24,7 @@ function Home() {
   if (profile?.role === 'admin') return <AdminDashboard />
   if (profile?.role === 'boss') return <BossDashboard />
   if (profile?.role === 'gerant') return <GerantDashboard />
+  if (profile?.role === 'sous_depot') return <NouvelleCommandePage />
   return null
 }
 
@@ -31,7 +36,7 @@ export default function App() {
       <Route
         path="/"
         element={
-          <ProtectedRoute allowedRoles={['admin', 'boss', 'gerant']}>
+          <ProtectedRoute allowedRoles={['admin', 'boss', 'gerant', 'sous_depot']}>
             <Home />
           </ProtectedRoute>
         }
@@ -84,6 +89,15 @@ export default function App() {
       />
 
       <Route
+        path="/commandes-suivi"
+        element={
+          <ProtectedRoute allowedRoles={['admin', 'boss']}>
+            <CommandesAdminPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
         path="/ventes"
         element={
           <ProtectedRoute allowedRoles={['admin', 'boss']}>
@@ -117,6 +131,25 @@ export default function App() {
         element={
           <ProtectedRoute allowedRoles={['gerant']}>
             <HistoriquePage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/commandes"
+        element={
+          <ProtectedRoute allowedRoles={['gerant']}>
+            <CommandesPage />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Routes spécifiques sous-dépôt */}
+      <Route
+        path="/mes-commandes"
+        element={
+          <ProtectedRoute allowedRoles={['sous_depot']}>
+            <MesCommandesPage />
           </ProtectedRoute>
         }
       />

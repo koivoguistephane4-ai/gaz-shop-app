@@ -61,12 +61,12 @@ Deno.serve(async (req) => {
       return json({ error: 'Champs requis manquants : email, password, nom, role.' }, 400)
     }
 
-    if (!['admin', 'boss', 'gerant'].includes(role)) {
+    if (!['admin', 'boss', 'gerant', 'sous_depot'].includes(role)) {
       return json({ error: 'Rôle invalide.' }, 400)
     }
 
-    if (role === 'gerant' && !boutique_id) {
-      return json({ error: 'Un gérant doit être rattaché à une boutique.' }, 400)
+    if ((role === 'gerant' || role === 'sous_depot') && !boutique_id) {
+      return json({ error: 'Un gérant ou un sous-dépôt doit être rattaché à une boutique.' }, 400)
     }
 
     if (password.length < 8) {
@@ -90,7 +90,7 @@ Deno.serve(async (req) => {
       email,
       nom,
       role,
-      boutique_id: role === 'gerant' ? boutique_id : null,
+      boutique_id: (role === 'gerant' || role === 'sous_depot') ? boutique_id : null,
       created_by: caller.id,
     })
 
@@ -107,6 +107,20 @@ Deno.serve(async (req) => {
       const { error: linkError } = await supabaseAdmin.from('boss_boutiques').insert(rows)
       if (linkError) {
         return json({ warning: `Compte créé, mais assignation des boutiques échouée : ${linkError.message}`, user_id: created.user.id }, 200)
+      }
+    }
+
+    // 4. Si sous-dépôt, création automatique de sa fiche sous_depots liée au compte
+    if (role === 'sous_depot') {
+      const { error: sousDepotError } = await supabaseAdmin.from('sous_depots').insert({
+        boutique_id,
+        nom,
+        telephone: body.telephone || null,
+        profile_id: created.user.id,
+        created_by: caller.id,
+      })
+      if (sousDepotError) {
+        return json({ warning: `Compte créé, mais fiche sous-dépôt échouée : ${sousDepotError.message}`, user_id: created.user.id }, 200)
       }
     }
 
