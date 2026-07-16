@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Fragment } from 'react'
 import { supabase } from '../../lib/supabaseClient'
 import Layout from '../../components/Layout'
+import CommandeLignesEditor from '../../components/CommandeLignesEditor'
 
 const STATUT_LABEL = {
   en_attente: 'En attente',
+  partiellement_livree: 'Partiellement livrée',
   livree: 'Livrée',
   payee: 'Payée',
   annulee: 'Annulée',
@@ -11,6 +13,7 @@ const STATUT_LABEL = {
 
 const STATUT_COLOR = {
   en_attente: 'bg-flame-100 text-flame-600',
+  partiellement_livree: 'bg-amber-100 text-amber-700',
   livree: 'bg-navy-800/10 text-navy-800',
   payee: 'bg-gas-success/10 text-gas-success',
   annulee: 'bg-gas-line text-gas-muted',
@@ -19,6 +22,7 @@ const STATUT_COLOR = {
 const STATUT_FILTERS = [
   { key: '', label: 'Toutes' },
   { key: 'en_attente', label: 'En attente' },
+  { key: 'partiellement_livree', label: 'Partiellement livrée' },
   { key: 'livree', label: 'Livrée' },
   { key: 'payee', label: 'Payée' },
   { key: 'annulee', label: 'Annulée' },
@@ -31,6 +35,7 @@ export default function CommandesAdminPage() {
   const [commandes, setCommandes] = useState([])
   const [loading, setLoading] = useState(true)
   const [message, setMessage] = useState(null)
+  const [expandedId, setExpandedId] = useState(null)
 
   useEffect(() => {
     supabase.from('boutiques').select('*').order('nom').then(({ data }) => setBoutiques(data ?? []))
@@ -72,7 +77,7 @@ export default function CommandesAdminPage() {
 
   const totalEnAttente = commandes.filter((c) => c.statut === 'en_attente').length
   const totalMontantNonPaye = commandes
-    .filter((c) => c.statut === 'en_attente' || c.statut === 'livree')
+    .filter((c) => c.statut === 'en_attente' || c.statut === 'partiellement_livree' || c.statut === 'livree')
     .reduce((sum, c) => sum + Number(c.montant_total || 0), 0)
 
   return (
@@ -144,7 +149,8 @@ export default function CommandesAdminPage() {
               <tr><td className="px-4 py-4 text-gas-muted" colSpan={8}>Aucune commande trouvée.</td></tr>
             )}
             {commandes.map((c) => (
-              <tr key={c.id} className="border-t border-gas-line align-top">
+              <Fragment key={c.id}>
+              <tr className="border-t border-gas-line align-top">
                 <td className="px-4 py-2 font-mono text-xs font-medium">{c.reference}</td>
                 <td className="px-4 py-2">{c.boutiques?.nom}</td>
                 <td className="px-4 py-2">{c.sous_depots?.nom}</td>
@@ -153,8 +159,21 @@ export default function CommandesAdminPage() {
                 </td>
                 <td className="px-4 py-2 text-xs text-gas-muted">
                   {(c.commande_lignes ?? []).map((l, i) => (
-                    <div key={i}>{l.bottle_brands?.nom} {l.taille} × {l.quantite}</div>
+                    <div key={i}>
+                      {l.bottle_brands?.nom} {l.taille} × {l.quantite}
+                      {l.quantite_livree > 0 && (
+                        <span className={l.quantite_livree >= l.quantite ? 'text-gas-success' : 'text-flame-600'}>
+                          {' '}({l.quantite_livree} livré{l.quantite_livree > 1 ? 's' : ''})
+                        </span>
+                      )}
+                    </div>
                   ))}
+                  <button
+                    onClick={() => setExpandedId(expandedId === c.id ? null : c.id)}
+                    className="text-flame-600 hover:underline mt-1"
+                  >
+                    {expandedId === c.id ? 'Fermer' : 'Détail / Livrer'}
+                  </button>
                 </td>
                 <td className="px-4 py-2 tabular">{Number(c.montant_total).toLocaleString('fr-FR')} F</td>
                 <td className="px-4 py-2">
@@ -163,23 +182,26 @@ export default function CommandesAdminPage() {
                   </span>
                 </td>
                 <td className="px-4 py-2 text-right space-y-1">
-                  {c.statut === 'en_attente' && (
-                    <button onClick={() => updateStatut(c, 'livree')} className="block text-xs text-navy-800 hover:underline">
-                      Marquer livrée
-                    </button>
-                  )}
                   {c.statut === 'livree' && (
                     <button onClick={() => updateStatut(c, 'payee')} className="block text-xs text-gas-success hover:underline">
                       Marquer payée
                     </button>
                   )}
-                  {(c.statut === 'en_attente' || c.statut === 'livree') && (
+                  {(c.statut === 'en_attente' || c.statut === 'partiellement_livree') && (
                     <button onClick={() => updateStatut(c, 'annulee')} className="block text-xs text-gas-danger hover:underline">
                       Annuler
                     </button>
                   )}
                 </td>
               </tr>
+              {expandedId === c.id && (
+                <tr className="border-t border-gas-line">
+                  <td colSpan={8} className="px-4 pb-3">
+                    <CommandeLignesEditor commande={c} onUpdated={load} />
+                  </td>
+                </tr>
+              )}
+              </Fragment>
             ))}
           </tbody>
         </table>

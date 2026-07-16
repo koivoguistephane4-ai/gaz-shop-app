@@ -6,7 +6,7 @@ import { paymentModeLabel } from '../../lib/paymentModes'
 import { downloadXlsx } from '../../lib/exportXlsx'
 import BrandLogo from '../../components/BrandLogo'
 
-const TAILLES = ['B6', 'B12']
+const TAILLES = ['B6', 'B12', 'B28']
 
 // Calcule la date de début selon la période choisie
 function startDateFor(period) {

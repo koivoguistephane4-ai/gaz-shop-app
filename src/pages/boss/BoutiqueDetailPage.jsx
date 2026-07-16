@@ -6,7 +6,7 @@ import { paymentModeLabel } from '../../lib/paymentModes'
 import { downloadXlsx } from '../../lib/exportXlsx'
 import SalesCalendar from '../../components/SalesCalendar'
 
-const TAILLES = ['B6', 'B12']
+const TAILLES = ['B6', 'B12', 'B28']
 
 function startDateFor(period) {
   const now = new Date()

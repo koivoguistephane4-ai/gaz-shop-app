@@ -155,6 +155,7 @@ export default function VentesPage() {
                       >
                         <option value="B6">B6</option>
                         <option value="B12">B12</option>
+              <option value="B28">B28</option>
                       </select>
                     </td>
                     <td className="px-4 py-2 tabular text-gas-muted">recalculé</td>

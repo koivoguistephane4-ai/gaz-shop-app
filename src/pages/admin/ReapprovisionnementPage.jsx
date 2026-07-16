@@ -118,6 +118,7 @@ export default function ReapprovisionnementPage() {
               <select className="input-field" value={form.taille} onChange={(e) => updateForm('taille', e.target.value)}>
                 <option value="B6">B6</option>
                 <option value="B12">B12</option>
+              <option value="B28">B28</option>
               </select>
             </div>
             <div>

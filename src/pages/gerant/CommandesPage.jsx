@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Fragment } from 'react'
+import CommandeLignesEditor from '../../components/CommandeLignesEditor'
 import { supabase } from '../../lib/supabaseClient'
 import { useAuth } from '../../context/AuthContext'
 import Layout from '../../components/Layout'
 
 const STATUT_LABEL = {
   en_attente: 'En attente',
+  partiellement_livree: 'Partiellement livrée',
   livree: 'Livrée',
   payee: 'Payée',
   annulee: 'Annulée',
@@ -12,6 +14,7 @@ const STATUT_LABEL = {
 
 const STATUT_COLOR = {
   en_attente: 'bg-flame-100 text-flame-600',
+  partiellement_livree: 'bg-amber-100 text-amber-700',
   livree: 'bg-navy-800/10 text-navy-800',
   payee: 'bg-gas-success/10 text-gas-success',
   annulee: 'bg-gas-line text-gas-muted',
@@ -34,6 +37,7 @@ export default function CommandesPage() {
   const [cart, setCart] = useState([]) // { brand_id, brand_nom, taille, quantite }
   const [lineForm, setLineForm] = useState({ brand_id: '', taille: 'B6', quantite: 1 })
   const [saving, setSaving] = useState(false)
+  const [expandedId, setExpandedId] = useState(null)
 
   useEffect(() => {
     if (profile) load()
@@ -232,6 +236,7 @@ export default function CommandesPage() {
               >
                 <option value="B6">B6</option>
                 <option value="B12">B12</option>
+              <option value="B28">B28</option>
               </select>
             </div>
             <div className="flex gap-2">
@@ -320,7 +325,8 @@ export default function CommandesPage() {
               <tr><td className="px-4 py-4 text-gas-muted" colSpan={7}>Aucune commande pour l'instant.</td></tr>
             )}
             {commandes.map((c) => (
-              <tr key={c.id} className="border-t border-gas-line align-top">
+              <Fragment key={c.id}>
+              <tr className="border-t border-gas-line align-top">
                 <td className="px-4 py-2 font-mono text-xs font-medium">{c.reference}</td>
                 <td className="px-4 py-2">{c.sous_depots?.nom}</td>
                 <td className="px-4 py-2 tabular text-gas-muted">
@@ -328,8 +334,21 @@ export default function CommandesPage() {
                 </td>
                 <td className="px-4 py-2 text-xs text-gas-muted">
                   {(c.commande_lignes ?? []).map((l, i) => (
-                    <div key={i}>{l.bottle_brands?.nom} {l.taille} × {l.quantite}</div>
+                    <div key={i}>
+                      {l.bottle_brands?.nom} {l.taille} × {l.quantite}
+                      {l.quantite_livree > 0 && (
+                        <span className={l.quantite_livree >= l.quantite ? 'text-gas-success' : 'text-flame-600'}>
+                          {' '}({l.quantite_livree} livré{l.quantite_livree > 1 ? 's' : ''})
+                        </span>
+                      )}
+                    </div>
                   ))}
+                  <button
+                    onClick={() => setExpandedId(expandedId === c.id ? null : c.id)}
+                    className="text-flame-600 hover:underline mt-1"
+                  >
+                    {expandedId === c.id ? 'Fermer' : 'Modifier / Livrer'}
+                  </button>
                 </td>
                 <td className="px-4 py-2 tabular">{Number(c.montant_total).toLocaleString('fr-FR')} F</td>
                 <td className="px-4 py-2">
@@ -338,30 +357,33 @@ export default function CommandesPage() {
                   </span>
                 </td>
                 <td className="px-4 py-2 text-right space-y-1">
-                  {c.statut === 'en_attente' && (
-                    <button onClick={() => updateStatut(c, 'livree')} className="block text-xs text-navy-800 hover:underline">
-                      Marquer livrée
-                    </button>
-                  )}
                   {c.statut === 'livree' && (
                     <button onClick={() => updateStatut(c, 'payee')} className="block text-xs text-gas-success hover:underline">
                       Marquer payée
                     </button>
                   )}
-                  {(c.statut === 'en_attente' || c.statut === 'livree') && (
+                  {(c.statut === 'en_attente' || c.statut === 'partiellement_livree') && (
                     <button onClick={() => updateStatut(c, 'annulee')} className="block text-xs text-gas-danger hover:underline">
                       Annuler
                     </button>
                   )}
                 </td>
               </tr>
+              {expandedId === c.id && (
+                <tr className="border-t border-gas-line">
+                  <td colSpan={7} className="px-4 pb-3">
+                    <CommandeLignesEditor commande={c} onUpdated={load} />
+                  </td>
+                </tr>
+              )}
+              </Fragment>
             ))}
           </tbody>
         </table>
       </div>
 
       <p className="text-xs text-gas-muted mt-4">
-        Marquer une commande « livrée » retire automatiquement les bouteilles du stock. Une fois « payée », la référence (ex: {commandes[0]?.reference || 'CMD-2026-0001'}) sert de preuve pour retrouver la commande en cas de litige.
+        Cliquez « Modifier / Livrer » sur une commande pour ajuster une quantité ou livrer ce que vous avez en stock — même partiellement, ligne par ligne. La référence (ex: {commandes[0]?.reference || 'CMD-2026-0001'}) sert de preuve pour retrouver la commande en cas de litige.
       </p>
     </Layout>
   )

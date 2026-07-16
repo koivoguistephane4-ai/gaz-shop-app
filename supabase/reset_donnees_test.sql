@@ -2,12 +2,17 @@
 -- REMISE À ZÉRO avant mise en production
 --
 -- ⚠️ IRRÉVERSIBLE : à n'exécuter qu'une fois sûr de vouloir effacer
--- toutes les ventes/stock/rapports de test.
+-- toutes les ventes/stock/rapports/commandes de test.
 --
 -- CE QUI EST CONSERVÉ : boutiques, comptes utilisateurs, marques,
 -- logos, prix actuels et leur historique.
 -- CE QUI EST EFFACÉ : ventes, stock, réappros, rapports journaliers,
--- journaux d'audit.
+-- journaux d'audit, commandes et leurs lignes.
+--
+-- Note : les fiches sous_depots (et les comptes utilisateurs liés)
+-- ne sont PAS supprimées ici — seulement leurs commandes.
+-- Si vous voulez aussi supprimer un compte sous-dépôt de test,
+-- faites-le depuis la page Utilisateurs (admin).
 --
 -- Version tolérante : n'échoue pas si une table optionnelle
 -- (créée par une migration que vous n'avez pas encore exécutée)
@@ -25,7 +30,9 @@ begin
     'stock',
     'report_audit_log',
     'daily_report_lines',
-    'daily_reports'
+    'daily_reports',
+    'commande_lignes',
+    'commandes'
   ]
   loop
     if exists (select 1 from pg_tables where schemaname = 'public' and tablename = t) then

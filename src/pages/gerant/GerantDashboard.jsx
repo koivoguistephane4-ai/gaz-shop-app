@@ -200,6 +200,7 @@ export default function GerantDashboard() {
             >
               <option value="B6">B6</option>
               <option value="B12">B12</option>
+              <option value="B28">B28</option>
             </select>
           </div>
           <div>

@@ -141,6 +141,7 @@ export default function NouvelleCommandePage() {
             <select className="input-field" value={lineForm.taille} onChange={(e) => setLineForm((f) => ({ ...f, taille: e.target.value }))}>
               <option value="B6">B6</option>
               <option value="B12">B12</option>
+              <option value="B28">B28</option>
             </select>
           </div>
           <div>
